@@ -1,0 +1,279 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  annotations:
+    app.openshift.io/vcs-ref: ""
+    app.openshift.io/vcs-uri: https://github.com/donschenck/qotd-nodejs
+    openshift.io/generated-by: OpenShiftWebConsole
+  labels:
+    app: qotd-nodejs
+    app.kubernetes.io/component: qotd-nodejs
+    app.kubernetes.io/instance: qotd-nodejs
+    app.kubernetes.io/name: qotd-nodejs
+    app.kubernetes.io/part-of: qotd
+  name: qotd-nodejs
+spec:
+  failedBuildsHistoryLimit: 5
+  nodeSelector: null
+  output:
+    to:
+      kind: ImageStreamTag
+      name: qotd-nodejs:latest
+  postCommit: {}
+  resources: {}
+  runPolicy: Serial
+  source:
+    contextDir: /
+    git:
+      uri: https://github.com/donschenck/qotd-nodejs
+    type: Git
+  strategy:
+    dockerStrategy:
+      dockerfilePath: Dockerfile
+    type: Docker
+  successfulBuildsHistoryLimit: 5
+  triggers:
+  - generic:
+      secretReference:
+        name: qotd-nodejs-generic-webhook-secret
+    type: Generic
+  - github:
+      secretReference:
+        name: qotd-nodejs-github-webhook-secret
+    type: GitHub
+  - type: ConfigChange
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    alpha.image.policy.openshift.io/resolve-names: '*'
+    app.openshift.io/route-disabled: "false"
+    app.openshift.io/vcs-ref: ""
+    app.openshift.io/vcs-uri: https://github.com/donschenck/qotd-nodejs
+    image.openshift.io/triggers: '[{"from":{"kind":"ImageStreamTag","name":"qotd-nodejs:latest"},"fieldPath":"spec.template.spec.containers[?(@.name==\"qotd-nodejs\")].image","pause":"false"}]'
+    openshift.io/generated-by: OpenShiftWebConsole
+  labels:
+    app: qotd-nodejs
+    app.kubernetes.io/component: qotd-nodejs
+    app.kubernetes.io/instance: qotd-nodejs
+    app.kubernetes.io/name: qotd-nodejs
+    app.kubernetes.io/part-of: qotd
+  name: qotd-nodejs
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: qotd-nodejs
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: qotd-nodejs
+        deployment: qotd-nodejs
+    spec:
+      containers:
+      - image: image-registry.openshift-image-registry.svc:5000/rhn-engineering-dsch-dev/qotd-nodejs@sha256:19ee6eebf4aaa0aec85a3cd0b0a44aa415018f2490c8b9dd49946bee3091b31f
+        imagePullPolicy: Always
+        name: qotd-nodejs
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: apps.openshift.io/v1
+kind: DeploymentConfig
+metadata:
+  annotations:
+    description: Defines how to deploy the application server
+    template.alpha.openshift.io/wait-for-ready: "true"
+  labels:
+    app: httpd-example
+    app.kubernetes.io/part-of: qotd
+    template: httpd-example
+    template.openshift.io/template-instance-owner: 5dd2722e-924b-4887-aaa7-855f18475e9e
+  name: qotd
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    name: qotd
+  strategy:
+    activeDeadlineSeconds: 21600
+    resources: {}
+    rollingParams:
+      intervalSeconds: 1
+      maxSurge: 25%
+      maxUnavailable: 25%
+      timeoutSeconds: 600
+      updatePeriodSeconds: 1
+    type: Rolling
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        name: qotd
+      name: qotd
+    spec:
+      containers:
+      - image: image-registry.openshift-image-registry.svc:5000/rhn-engineering-dsch-dev/qotd@sha256:7704948b7ef53891647927063534324ab69e33b9ffb75edb6d492fab642b9538
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 3
+        name: httpd-example
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 3
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 3
+        resources:
+          limits:
+            memory: 512Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+  test: false
+  triggers:
+  - imageChangeParams:
+      automatic: true
+      containerNames:
+      - httpd-example
+      from:
+        kind: ImageStreamTag
+        name: qotd:latest
+        namespace: rhn-engineering-dsch-dev
+      lastTriggeredImage: image-registry.openshift-image-registry.svc:5000/rhn-engineering-dsch-dev/qotd@sha256:7704948b7ef53891647927063534324ab69e33b9ffb75edb6d492fab642b9538
+    type: ImageChange
+  - type: ConfigChange
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  annotations:
+    app.openshift.io/vcs-ref: ""
+    app.openshift.io/vcs-uri: https://github.com/donschenck/qotd-nodejs
+    openshift.io/generated-by: OpenShiftWebConsole
+  labels:
+    app: qotd-nodejs
+    app.kubernetes.io/component: qotd-nodejs
+    app.kubernetes.io/instance: qotd-nodejs
+    app.kubernetes.io/name: qotd-nodejs
+    app.kubernetes.io/part-of: qotd
+  name: qotd-nodejs
+spec:
+  lookupPolicy:
+    local: false
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  annotations:
+    openshift.io/host.generated: "true"
+  labels:
+    app: qotd-nodejs
+    app.kubernetes.io/component: qotd-nodejs
+    app.kubernetes.io/instance: qotd-nodejs
+    app.kubernetes.io/name: qotd-nodejs
+    app.kubernetes.io/part-of: qotd
+  name: qotd-nodejs
+spec:
+  port:
+    targetPort: 10000-tcp
+  tls:
+    insecureEdgeTerminationPolicy: Redirect
+    termination: edge
+  to:
+    kind: Service
+    name: qotd-nodejs
+    weight: 100
+  wildcardPolicy: None
+---
+apiVersion: v1
+data:
+  WebHookSecretKey: OTg3NmJiOTFkNDc5ZjRhMw==
+kind: Secret
+metadata:
+  labels:
+    app: qotd-nodejs
+    app.kubernetes.io/component: qotd-nodejs
+    app.kubernetes.io/instance: qotd-nodejs
+    app.kubernetes.io/name: qotd-nodejs
+    app.kubernetes.io/part-of: qotd
+  name: qotd-nodejs-generic-webhook-secret
+type: Opaque
+---
+apiVersion: v1
+data:
+  WebHookSecretKey: MjA3MjE2YmQyNmJlOGQwZg==
+kind: Secret
+metadata:
+  labels:
+    app: qotd-nodejs
+    app.kubernetes.io/component: qotd-nodejs
+    app.kubernetes.io/instance: qotd-nodejs
+    app.kubernetes.io/name: qotd-nodejs
+    app.kubernetes.io/part-of: qotd
+  name: qotd-nodejs-github-webhook-secret
+type: Opaque
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    app.openshift.io/vcs-ref: ""
+    app.openshift.io/vcs-uri: https://github.com/donschenck/qotd-nodejs
+    openshift.io/generated-by: OpenShiftWebConsole
+  labels:
+    app: qotd-nodejs
+    app.kubernetes.io/component: qotd-nodejs
+    app.kubernetes.io/instance: qotd-nodejs
+    app.kubernetes.io/name: qotd-nodejs
+    app.kubernetes.io/part-of: qotd
+  name: qotd-nodejs
+spec:
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: 10000-tcp
+    port: 10000
+    protocol: TCP
+    targetPort: 10000
+  selector:
+    app: qotd-nodejs
+    deployment: qotd-nodejs
+  sessionAffinity: None
+  type: ClusterIP
+
