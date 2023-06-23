@@ -1,0 +1,17 @@
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  annotations:
+    app.openshift.io/vcs-ref: ""
+    app.openshift.io/vcs-uri: https://github.com/donschenck/qotd-nodejs
+    openshift.io/generated-by: OpenShiftWebConsole
+  labels:
+    app: qotd-nodejs
+    app.kubernetes.io/component: qotd-nodejs
+    app.kubernetes.io/instance: qotd-nodejs
+    app.kubernetes.io/name: qotd-nodejs
+    app.kubernetes.io/part-of: qotd
+  name: qotd-nodejs
+spec:
+  lookupPolicy:
+    local: false

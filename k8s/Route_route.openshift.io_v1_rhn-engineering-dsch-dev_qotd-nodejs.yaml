@@ -1,0 +1,23 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  annotations:
+    openshift.io/host.generated: "true"
+  labels:
+    app: qotd-nodejs
+    app.kubernetes.io/component: qotd-nodejs
+    app.kubernetes.io/instance: qotd-nodejs
+    app.kubernetes.io/name: qotd-nodejs
+    app.kubernetes.io/part-of: qotd
+  name: qotd-nodejs
+spec:
+  port:
+    targetPort: 10000-tcp
+  tls:
+    insecureEdgeTerminationPolicy: Redirect
+    termination: edge
+  to:
+    kind: Service
+    name: qotd-nodejs
+    weight: 100
+  wildcardPolicy: None
