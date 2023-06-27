@@ -3,14 +3,66 @@ kind: BuildConfig
 metadata:
   annotations:
     app.openshift.io/vcs-ref: ""
-    app.openshift.io/vcs-uri: https://github.com/donschenck/qotd-nodejs
+    app.openshift.io/vcs-uri: https://github.com/donschenck/qotd-frontend
+    openshift.io/generated-by: OpenShiftWebConsole
+  labels:
+    app: qotd-frontend
+    app.kubernetes.io/component: qotd-frontend
+    app.kubernetes.io/instance: qotd-frontend
+    app.kubernetes.io/name: qotd-frontend
+    app.kubernetes.io/part-of: QuoteOfTheDay
+    app.openshift.io/runtime: httpd
+    app.openshift.io/runtime-version: 2.4-el7
+  name: qotd-frontend
+spec:
+  failedBuildsHistoryLimit: 5
+  nodeSelector: null
+  output:
+    to:
+      kind: ImageStreamTag
+      name: qotd-frontend:latest
+  postCommit: {}
+  resources: {}
+  runPolicy: Serial
+  source:
+    contextDir: /
+    git:
+      uri: https://github.com/donschenck/qotd-frontend
+    type: Git
+  strategy:
+    sourceStrategy:
+      from:
+        kind: ImageStreamTag
+        name: httpd:2.4-el7
+        namespace: openshift
+    type: Source
+  successfulBuildsHistoryLimit: 5
+  triggers:
+  - generic:
+      secretReference:
+        name: qotd-frontend-generic-webhook-secret
+    type: Generic
+  - github:
+      secretReference:
+        name: qotd-frontend-github-webhook-secret
+    type: GitHub
+  - imageChange: {}
+    type: ImageChange
+  - type: ConfigChange
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  annotations:
+    app.openshift.io/vcs-ref: ""
+    app.openshift.io/vcs-uri: https://github.com/redhat-developer-demos/qotd-nodejs
     openshift.io/generated-by: OpenShiftWebConsole
   labels:
     app: qotd-nodejs
     app.kubernetes.io/component: qotd-nodejs
     app.kubernetes.io/instance: qotd-nodejs
     app.kubernetes.io/name: qotd-nodejs
-    app.kubernetes.io/part-of: qotd
+    app.kubernetes.io/part-of: QuoteOfTheDay
   name: qotd-nodejs
 spec:
   failedBuildsHistoryLimit: 5
@@ -25,7 +77,7 @@ spec:
   source:
     contextDir: /
     git:
-      uri: https://github.com/donschenck/qotd-nodejs
+      uri: https://github.com/redhat-developer-demos/qotd-nodejs
     type: Git
   strategy:
     dockerStrategy:
@@ -50,7 +102,63 @@ metadata:
     alpha.image.policy.openshift.io/resolve-names: '*'
     app.openshift.io/route-disabled: "false"
     app.openshift.io/vcs-ref: ""
-    app.openshift.io/vcs-uri: https://github.com/donschenck/qotd-nodejs
+    app.openshift.io/vcs-uri: https://github.com/donschenck/qotd-frontend
+    image.openshift.io/triggers: '[{"from":{"kind":"ImageStreamTag","name":"qotd-frontend:latest"},"fieldPath":"spec.template.spec.containers[?(@.name==\"qotd-frontend\")].image","pause":"false"}]'
+    openshift.io/generated-by: OpenShiftWebConsole
+  labels:
+    app: qotd-frontend
+    app.kubernetes.io/component: qotd-frontend
+    app.kubernetes.io/instance: qotd-frontend
+    app.kubernetes.io/name: qotd-frontend
+    app.kubernetes.io/part-of: QuoteOfTheDay
+    app.openshift.io/runtime: httpd
+    app.openshift.io/runtime-version: 2.4-el7
+  name: qotd-frontend
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: qotd-frontend
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: qotd-frontend
+        deployment: qotd-frontend
+    spec:
+      containers:
+      - image: image-registry.openshift-image-registry.svc:5000/rhn-engineering-dsch-dev/qotd-frontend@sha256:fb9180162ce88237b74e5631e971dc30a04e4eae75e2746b2fc7ee4be488898b
+        imagePullPolicy: Always
+        name: qotd-frontend
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        - containerPort: 8443
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    alpha.image.policy.openshift.io/resolve-names: '*'
+    app.openshift.io/route-disabled: "false"
+    app.openshift.io/vcs-ref: ""
+    app.openshift.io/vcs-uri: https://github.com/redhat-developer-demos/qotd-nodejs
     image.openshift.io/triggers: '[{"from":{"kind":"ImageStreamTag","name":"qotd-nodejs:latest"},"fieldPath":"spec.template.spec.containers[?(@.name==\"qotd-nodejs\")].image","pause":"false"}]'
     openshift.io/generated-by: OpenShiftWebConsole
   labels:
@@ -58,7 +166,7 @@ metadata:
     app.kubernetes.io/component: qotd-nodejs
     app.kubernetes.io/instance: qotd-nodejs
     app.kubernetes.io/name: qotd-nodejs
-    app.kubernetes.io/part-of: qotd
+    app.kubernetes.io/part-of: QuoteOfTheDay
   name: qotd-nodejs
 spec:
   progressDeadlineSeconds: 600
@@ -80,7 +188,7 @@ spec:
         deployment: qotd-nodejs
     spec:
       containers:
-      - image: image-registry.openshift-image-registry.svc:5000/rhn-engineering-dsch-dev/qotd-nodejs@sha256:19ee6eebf4aaa0aec85a3cd0b0a44aa415018f2490c8b9dd49946bee3091b31f
+      - image: image-registry.openshift-image-registry.svc:5000/rhn-engineering-dsch-dev/qotd-nodejs@sha256:619a10c61d8f868722f36b0639d5115aea85aa7018b5ee800792fc2b8335f432
         imagePullPolicy: Always
         name: qotd-nodejs
         resources: {}
@@ -92,104 +200,39 @@ spec:
       securityContext: {}
       terminationGracePeriodSeconds: 30
 ---
-apiVersion: apps.openshift.io/v1
-kind: DeploymentConfig
+apiVersion: image.openshift.io/v1
+kind: ImageStream
 metadata:
   annotations:
-    description: Defines how to deploy the application server
-    template.alpha.openshift.io/wait-for-ready: "true"
+    app.openshift.io/vcs-ref: ""
+    app.openshift.io/vcs-uri: https://github.com/donschenck/qotd-frontend
+    openshift.io/generated-by: OpenShiftWebConsole
   labels:
-    app: httpd-example
-    app.kubernetes.io/part-of: qotd
-    template: httpd-example
-    template.openshift.io/template-instance-owner: 5dd2722e-924b-4887-aaa7-855f18475e9e
-  name: qotd
+    app: qotd-frontend
+    app.kubernetes.io/component: qotd-frontend
+    app.kubernetes.io/instance: qotd-frontend
+    app.kubernetes.io/name: qotd-frontend
+    app.kubernetes.io/part-of: QuoteOfTheDay
+    app.openshift.io/runtime: httpd
+    app.openshift.io/runtime-version: 2.4-el7
+  name: qotd-frontend
 spec:
-  replicas: 1
-  revisionHistoryLimit: 10
-  selector:
-    name: qotd
-  strategy:
-    activeDeadlineSeconds: 21600
-    resources: {}
-    rollingParams:
-      intervalSeconds: 1
-      maxSurge: 25%
-      maxUnavailable: 25%
-      timeoutSeconds: 600
-      updatePeriodSeconds: 1
-    type: Rolling
-  template:
-    metadata:
-      creationTimestamp: null
-      labels:
-        name: qotd
-      name: qotd
-    spec:
-      containers:
-      - image: image-registry.openshift-image-registry.svc:5000/rhn-engineering-dsch-dev/qotd@sha256:7704948b7ef53891647927063534324ab69e33b9ffb75edb6d492fab642b9538
-        imagePullPolicy: IfNotPresent
-        livenessProbe:
-          failureThreshold: 3
-          httpGet:
-            path: /
-            port: 8080
-            scheme: HTTP
-          initialDelaySeconds: 30
-          periodSeconds: 10
-          successThreshold: 1
-          timeoutSeconds: 3
-        name: httpd-example
-        ports:
-        - containerPort: 8080
-          protocol: TCP
-        readinessProbe:
-          failureThreshold: 3
-          httpGet:
-            path: /
-            port: 8080
-            scheme: HTTP
-          initialDelaySeconds: 3
-          periodSeconds: 10
-          successThreshold: 1
-          timeoutSeconds: 3
-        resources:
-          limits:
-            memory: 512Mi
-        terminationMessagePath: /dev/termination-log
-        terminationMessagePolicy: File
-      dnsPolicy: ClusterFirst
-      restartPolicy: Always
-      schedulerName: default-scheduler
-      securityContext: {}
-      terminationGracePeriodSeconds: 30
-  test: false
-  triggers:
-  - imageChangeParams:
-      automatic: true
-      containerNames:
-      - httpd-example
-      from:
-        kind: ImageStreamTag
-        name: qotd:latest
-        namespace: rhn-engineering-dsch-dev
-      lastTriggeredImage: image-registry.openshift-image-registry.svc:5000/rhn-engineering-dsch-dev/qotd@sha256:7704948b7ef53891647927063534324ab69e33b9ffb75edb6d492fab642b9538
-    type: ImageChange
-  - type: ConfigChange
+  lookupPolicy:
+    local: false
 ---
 apiVersion: image.openshift.io/v1
 kind: ImageStream
 metadata:
   annotations:
     app.openshift.io/vcs-ref: ""
-    app.openshift.io/vcs-uri: https://github.com/donschenck/qotd-nodejs
+    app.openshift.io/vcs-uri: https://github.com/redhat-developer-demos/qotd-nodejs
     openshift.io/generated-by: OpenShiftWebConsole
   labels:
     app: qotd-nodejs
     app.kubernetes.io/component: qotd-nodejs
     app.kubernetes.io/instance: qotd-nodejs
     app.kubernetes.io/name: qotd-nodejs
-    app.kubernetes.io/part-of: qotd
+    app.kubernetes.io/part-of: QuoteOfTheDay
   name: qotd-nodejs
 spec:
   lookupPolicy:
@@ -201,11 +244,37 @@ metadata:
   annotations:
     openshift.io/host.generated: "true"
   labels:
+    app: qotd-frontend
+    app.kubernetes.io/component: qotd-frontend
+    app.kubernetes.io/instance: qotd-frontend
+    app.kubernetes.io/name: qotd-frontend
+    app.kubernetes.io/part-of: QuoteOfTheDay
+    app.openshift.io/runtime: httpd
+    app.openshift.io/runtime-version: 2.4-el7
+  name: qotd-frontend
+spec:
+  port:
+    targetPort: 8080-tcp
+  tls:
+    insecureEdgeTerminationPolicy: Redirect
+    termination: edge
+  to:
+    kind: Service
+    name: qotd-frontend
+    weight: 100
+  wildcardPolicy: None
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  annotations:
+    openshift.io/host.generated: "true"
+  labels:
     app: qotd-nodejs
     app.kubernetes.io/component: qotd-nodejs
     app.kubernetes.io/instance: qotd-nodejs
     app.kubernetes.io/name: qotd-nodejs
-    app.kubernetes.io/part-of: qotd
+    app.kubernetes.io/part-of: QuoteOfTheDay
   name: qotd-nodejs
 spec:
   port:
@@ -221,7 +290,39 @@ spec:
 ---
 apiVersion: v1
 data:
-  WebHookSecretKey: OTg3NmJiOTFkNDc5ZjRhMw==
+  WebHookSecretKey: M2I2ZDc4NmU3ZGQxYTE1ZA==
+kind: Secret
+metadata:
+  labels:
+    app: qotd-frontend
+    app.kubernetes.io/component: qotd-frontend
+    app.kubernetes.io/instance: qotd-frontend
+    app.kubernetes.io/name: qotd-frontend
+    app.kubernetes.io/part-of: QuoteOfTheDay
+    app.openshift.io/runtime: httpd
+    app.openshift.io/runtime-version: 2.4-el7
+  name: qotd-frontend-generic-webhook-secret
+type: Opaque
+---
+apiVersion: v1
+data:
+  WebHookSecretKey: YzA5NWE1Mzg3YjM4ZTI2NA==
+kind: Secret
+metadata:
+  labels:
+    app: qotd-frontend
+    app.kubernetes.io/component: qotd-frontend
+    app.kubernetes.io/instance: qotd-frontend
+    app.kubernetes.io/name: qotd-frontend
+    app.kubernetes.io/part-of: QuoteOfTheDay
+    app.openshift.io/runtime: httpd
+    app.openshift.io/runtime-version: 2.4-el7
+  name: qotd-frontend-github-webhook-secret
+type: Opaque
+---
+apiVersion: v1
+data:
+  WebHookSecretKey: MDRhMWM5NjdlZTUyY2E0Yw==
 kind: Secret
 metadata:
   labels:
@@ -229,13 +330,13 @@ metadata:
     app.kubernetes.io/component: qotd-nodejs
     app.kubernetes.io/instance: qotd-nodejs
     app.kubernetes.io/name: qotd-nodejs
-    app.kubernetes.io/part-of: qotd
+    app.kubernetes.io/part-of: QuoteOfTheDay
   name: qotd-nodejs-generic-webhook-secret
 type: Opaque
 ---
 apiVersion: v1
 data:
-  WebHookSecretKey: MjA3MjE2YmQyNmJlOGQwZg==
+  WebHookSecretKey: MGNjMzFjNDgwZDlhMjYyZQ==
 kind: Secret
 metadata:
   labels:
@@ -243,7 +344,7 @@ metadata:
     app.kubernetes.io/component: qotd-nodejs
     app.kubernetes.io/instance: qotd-nodejs
     app.kubernetes.io/name: qotd-nodejs
-    app.kubernetes.io/part-of: qotd
+    app.kubernetes.io/part-of: QuoteOfTheDay
   name: qotd-nodejs-github-webhook-secret
 type: Opaque
 ---
@@ -252,14 +353,50 @@ kind: Service
 metadata:
   annotations:
     app.openshift.io/vcs-ref: ""
-    app.openshift.io/vcs-uri: https://github.com/donschenck/qotd-nodejs
+    app.openshift.io/vcs-uri: https://github.com/donschenck/qotd-frontend
+    openshift.io/generated-by: OpenShiftWebConsole
+  labels:
+    app: qotd-frontend
+    app.kubernetes.io/component: qotd-frontend
+    app.kubernetes.io/instance: qotd-frontend
+    app.kubernetes.io/name: qotd-frontend
+    app.kubernetes.io/part-of: QuoteOfTheDay
+    app.openshift.io/runtime: httpd
+    app.openshift.io/runtime-version: 2.4-el7
+  name: qotd-frontend
+spec:
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: 8080-tcp
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  - name: 8443-tcp
+    port: 8443
+    protocol: TCP
+    targetPort: 8443
+  selector:
+    app: qotd-frontend
+    deployment: qotd-frontend
+  sessionAffinity: None
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    app.openshift.io/vcs-ref: ""
+    app.openshift.io/vcs-uri: https://github.com/redhat-developer-demos/qotd-nodejs
     openshift.io/generated-by: OpenShiftWebConsole
   labels:
     app: qotd-nodejs
     app.kubernetes.io/component: qotd-nodejs
     app.kubernetes.io/instance: qotd-nodejs
     app.kubernetes.io/name: qotd-nodejs
-    app.kubernetes.io/part-of: qotd
+    app.kubernetes.io/part-of: QuoteOfTheDay
   name: qotd-nodejs
 spec:
   internalTrafficPolicy: Cluster
@@ -276,4 +413,3 @@ spec:
     deployment: qotd-nodejs
   sessionAffinity: None
   type: ClusterIP
-
